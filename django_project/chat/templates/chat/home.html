@@ -2,12 +2,13 @@
 {% block content %}
     {% for chat in chats %}
         <article class="media content-section">
+            <img class="rounded-circle article-img"  src="{{ chat.author.profile.image.url }}">
             <div class="media-body">
             <div class="article-metadata">
                 <a class="mr-2" href="#">{{ chat.author }}</a>
                 <small class="text-muted">{{ chat.chat_date | date:"F d, Y" }}</small>
             </div>
-            <h2><a class="article-title" href="#">{{ chat.title }}</a></h2>
+            <h2><a class="article-title" href="{% url 'chat-detail' chat.id %}">{{ chat.title }}</a></h2>
             <p class="article-content">{{ chat.content }}</p>
             </div>
         </article>

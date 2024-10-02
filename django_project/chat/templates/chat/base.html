@@ -36,6 +36,7 @@
                     <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
                         {% csrf_token %}
                     </form>
+                    <a class="nav-item nav-link" href="{% url 'chat-create' %}">New Chat</a>
                     <a class="nav-item nav-link" href="{% url 'profile' %}">Profile</a>
                     <a href="#" class="nav-item nav-link" onclick="document.getElementById('logout-form').submit(); return false;">Logout</a>
                 {% else %}
