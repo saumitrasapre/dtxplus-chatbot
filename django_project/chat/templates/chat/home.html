@@ -14,7 +14,10 @@
                 <div class="input-section">
                     <textarea id="chat-input" class="form-control" rows="3" placeholder="Type your message..."></textarea>
                     <small class="text-muted">Press <strong>Enter</strong> to send, or <strong>Shift + Enter</strong> for a new line.</small>
-                    <button id="send-btn" class="btn btn-primary mt-2">Send</button>
+                    <div class="button-group">
+                        <button id="send-btn" class="btn btn-primary mt-2">Send</button>
+                        <button id="save-chat-btn" class="btn btn-secondary mt-2">Save Chat</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -33,7 +36,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-7">
-                            <h5><a class="article-title" href="{% url 'chat-detail' chat.id %}">{{ chat.title }}</a></h5>
+                            <small><a class="article-title" href="{% url 'chat-detail' chat.id %}">{{ chat.title }}</a></small>
                         </div>
                         <div class="col-md-5">
                             <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'chat-update' chat.id %}"><i class="fas fa-edit fa-sm"></i></a>
@@ -67,9 +70,9 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.new_chat_id) {
+                if (data.new_chat_thread_id) {
                     // Successfully received a new chat ID
-                    console.log("New Chat ID:", data.new_chat_id);
+                    console.log("New Chat ID:", data.new_chat_thread_id);
 
                     // Show the chat section
                     document.getElementById('chat-container').style.display = 'block';
@@ -111,6 +114,14 @@
             scrollChatToBottom();
         };
         }
+        // Function to close the WebSocket
+        function closeWebSocket() {
+            if (chatSocket && isConnected) {
+                chatSocket.close();
+                console.log("WebSocket connection closed.");
+            }
+        }
+
         // Initial WebSocket connection
         connectWebSocket();
 
@@ -203,7 +214,63 @@
                 showThinkingIndicator();
             }
         };
-    })
+
+
+        // Handle "Save Chat" button click
+        document.getElementById('save-chat-btn').addEventListener('click', function() {
+            // Clear chat messages from the chat box
+            const chatBox = document.getElementById('chat-box');
+            const chatMessages = chatBox.innerHTML;
+
+            if (chatMessages.trim() !== '') {
+                // Clear chat messages
+                chatBox.innerHTML = '';
+                // Close the WebSocket before saving the chat
+                closeWebSocket();
+                // Make an AJAX request to save the chat and generate the summary
+                fetch("{% url 'save_chat' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        'chat_messages': chatMessages
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("Chat saved successfully with title:", data.chat_title);
+                        
+                        // Reconnect to the WebSocket after saving
+                        connectWebSocket();
+
+                        // Optionally update the chat history UI
+                        updateChatHistory();
+                    } else {
+                        console.error("Failed to save the chat");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+
+            }
+        });
+
+        // Function to update chat history without reloading the page
+        function updateChatHistory() {
+            fetch("{% url 'chat_history_partial' %}")
+            .then(response => response.text())
+            .then(data => {
+                document.querySelector('.col-md-4 .content-section').innerHTML = data;
+            })
+            .catch(error => {
+                console.error('Error updating chat history:', error);
+            });
+        }
+    });
 </script>
     
 {% endblock content %}

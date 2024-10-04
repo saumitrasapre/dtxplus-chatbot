@@ -151,12 +151,17 @@ body {
   margin-top: 15px;
 }
 
-/* Centering the Send Button */
-#send-btn {
-  display: block;
-  width: fit-content;
-  margin: 10px auto; /* Centering the button */
-  padding: 10px 20px; /* Adjust padding for a larger clickable area */
+/* Flex Container for Buttons */
+.button-group {
+  display: flex; /* Use flexbox to align buttons */
+  justify-content: center; /* Center the buttons horizontally */
+  margin-top: 10px; /* Space above buttons */
+}
+
+/* Centering the Send Button and Save Chat Button */
+#send-btn, #save-chat-btn {
+  margin: 0 5px; /* Space between buttons */
+  padding: 15px 15px; /* Adjust padding for a larger clickable area */
 }
 
 /* Textarea Styling */

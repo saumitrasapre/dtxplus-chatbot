@@ -51,9 +51,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     def process_message(self, message):
-        chat_id = self.scope['session'].get('new_chat_id', '1')
-        print("Chat_id - ",chat_id)
-        res = invoke_graph_updates(user_input=message)
+        thread_id = self.scope['session'].get('new_chat_thread_id', '1')
+        print("Chat_id - ",thread_id)
+        res = invoke_graph_updates(user_input=message, thread_id=thread_id)
         ans = []
         for ele in res:
             msg = ele["messages"][-1]

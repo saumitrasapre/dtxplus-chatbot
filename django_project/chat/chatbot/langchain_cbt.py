@@ -104,7 +104,7 @@ def invoke_graph_updates(user_input: str, thread_id = '1'):
     DB_URI = get_db_uri()
     with PostgresSaver.from_conn_string(DB_URI) as memory:
         graph = graph_builder.compile(checkpointer=memory)
-        config = {"configurable": {"thread_id": '1'}}
+        config = {"configurable": {"thread_id": str(thread_id)}}
         res = []
         # clear_memory(thread_id='1')
         for event in graph.stream({"messages": [("user", user_input)]},config):
