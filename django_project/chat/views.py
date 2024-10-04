@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from typing import Any
+from django.db.models.query import QuerySet
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import (
@@ -10,27 +13,42 @@ from django.views.generic.edit import (
     UpdateView,
     DeleteView
 )
+from .chatbot import langchain_cbt
 
 from .models import Chat
 
 # Create your views here.
 
-
-@login_required
-def home(request):
-    context = {"chats": Chat.objects.all()}
-    return render(request, "chat/home.html", context)
-
-
-class ChatListView(ListView):
-    queryset = Chat.objects.all()
+class ChatListView(LoginRequiredMixin,ListView):
+    model = Chat
     template_name = "chat/home.html"  # Default - <app>/<model>_<viewtype>.html
     context_object_name = "chats"
-    ordering = ["-chat_date"]
 
+    # Handle chats
+    def handle_chat(self):
+        # Perform your custom logic here
+        return "This function handles chat"
 
-class ChatDetailView(DetailView):
-    queryset = Chat.objects.all()
+    def get_queryset(self) -> QuerySet[Any]:
+        user = self.request.user
+        return Chat.objects.filter(author=user).order_by("-chat_date")
+    
+    def get_context_data(self, **kwargs):
+        # Get the default context data from ListView
+        context = super().get_context_data(**kwargs)
+        
+        # Add custom data using your custom function
+        context['chat_msg'] = self.handle_chat()
+        
+        return context
+
+        
+class ChatDetailView(LoginRequiredMixin, DetailView):
+    model = Chat
+
+    def get_queryset(self) -> QuerySet[Any]:
+        user = self.request.user
+        return Chat.objects.filter(author=user).order_by("-chat_date")
 
 class ChatCreateView(LoginRequiredMixin, CreateView):
     model = Chat

@@ -50,9 +50,9 @@ body {
   }
   
   .article-img {
-    height: 65px;
-    width: 65px;
-    margin-right: 16px;
+    height: 25px;
+    width: 25px;
+    margin-right: 12px;
   }
   
   .article-metadata {
@@ -82,3 +82,86 @@ body {
   .account-heading {
     font-size: 2.5rem;
   }
+
+/* Chat Box */
+.chat-box {
+  border: 1px solid #ccc;
+  padding: 10px;
+  height: 500px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  font-size: 14px; /* Reduced from default (approx. 16px) */
+}
+
+/* Chat Bubbles */
+.chat-bubble {
+  padding: 12px 18px;
+  margin: 10px 0;
+  border-radius: 20px;
+  max-width: 60%;
+  word-wrap: break-word;
+  position: relative;
+  display: inline-block;
+  clear: both;
+  font-size: 14px; /* Reduced font size */
+}
+
+/* User (Right-side) Messages */
+.user-message {
+  background-color: #cce5ff; /* Light blue */
+  color: #000;
+  float: right;
+  text-align: left;
+  border-radius: 20px 20px 0px 20px; /* Bubble shape */
+  margin-right: 15px; /* To ensure it doesn't stick to the right edge */
+  font-size: 14px; /* Reduced font size */
+}
+
+/* Bot (Left-side) Messages */
+.bot-message {
+  background-color: #d4edda; /* Light green */
+  color: #000;
+  float: left;
+  text-align: left;
+  border-radius: 20px 20px 20px 0px; /* Bubble shape */
+  margin-left: 15px; /* To ensure it doesn't stick to the left edge */
+  margin-top: 10px; /* Align slightly below the user's message */
+  font-size: 14px; /* Reduced font size */
+}
+
+/* Thinking Indicator Bubble (Appears as bot message) */
+.thinking-bubble {
+  background-color: #d4edda; /* Same as bot message */
+  color: #555;
+  float: left;
+  text-align: left;
+  border-radius: 20px 20px 20px 0px; /* Same bubble shape as bot message */
+  margin-left: 15px;
+  margin-top: 10px;
+  padding: 12px 18px;
+  font-size: 14px; /* Reduced font size */
+  display: inline-block;
+  clear: both;
+}
+
+
+/* Input Section */
+.input-section {
+  margin-top: 15px;
+}
+
+/* Centering the Send Button */
+#send-btn {
+  display: block;
+  width: fit-content;
+  margin: 10px auto; /* Centering the button */
+  padding: 10px 20px; /* Adjust padding for a larger clickable area */
+}
+
+/* Textarea Styling */
+#chat-input {
+  width: 100%;
+  margin-bottom: 10px;
+  resize: none;
+}

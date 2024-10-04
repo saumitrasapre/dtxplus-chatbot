@@ -16,10 +16,10 @@ class UserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username','email']
+        fields = ['username','email','first_name','last_name']
 
 
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['image']
+        fields = ['date_of_birth','phone_number','medical_condition','medication_regimen','last_appointment_datetime','next_appointment_datetime','doctors_name','image']
