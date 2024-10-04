@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
+from .chatbot.memory.mem_operations import get_next_available_thread_id
 from django.views.generic import (
     ListView,
     DetailView,
@@ -13,7 +14,9 @@ from django.views.generic.edit import (
     UpdateView,
     DeleteView
 )
-from .chatbot import langchain_cbt
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Chat
 
@@ -41,6 +44,17 @@ class ChatListView(LoginRequiredMixin,ListView):
         context['chat_msg'] = self.handle_chat()
         
         return context
+
+@require_POST
+def start_new_chat(request):
+    # Call your backend function to generate the chat ID
+    new_chat_id = str(get_next_available_thread_id())
+
+    # Store the chat ID in the session
+    request.session['new_chat_id'] = new_chat_id
+
+    # Return the chat ID as JSON response
+    return JsonResponse({'new_chat_id': new_chat_id})
 
         
 class ChatDetailView(LoginRequiredMixin, DetailView):

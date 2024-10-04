@@ -4,13 +4,18 @@
     <div class="col-md-8">
         <div class="content-section">
             <h2>New Chat</h2> 
-            <div id="chat-box" class="chat-box">
-                <!-- Chat messages will appear here -->
-            </div>
-            <div class="input-section">
-                <textarea id="chat-input" class="form-control" rows="3" placeholder="Type your message..."></textarea>
-                <small class="text-muted">Press <strong>Enter</strong> to send, or <strong>Shift + Enter</strong> for a new line.</small>
-                <button id="send-btn" class="btn btn-primary mt-2">Send</button>
+            <button id="new-chat-btn" class="btn btn-primary mt-2">Start New Chat</button>
+            
+            <!-- Chat box section, initially hidden -->
+            <div id="chat-container" style="display: none;">
+                <div id="chat-box" class="chat-box">
+                    <!-- Chat messages will appear here -->
+                </div>
+                <div class="input-section">
+                    <textarea id="chat-input" class="form-control" rows="3" placeholder="Type your message..."></textarea>
+                    <small class="text-muted">Press <strong>Enter</strong> to send, or <strong>Shift + Enter</strong> for a new line.</small>
+                    <button id="send-btn" class="btn btn-primary mt-2">Send</button>
+                </div>
             </div>
         </div>
     </div>
@@ -45,105 +50,160 @@
 </div>
 
 <script>
-    const roomName = "{{ user.username }}";
-    const chatSocket = new WebSocket(
-        'ws://' + window.location.host + '/ws/chat/'+ roomName + '/' 
-    );
+    document.addEventListener('DOMContentLoaded', function() {
+        const roomName = "{{ user.username }}";
+        let chatSocket = null;  // Initialize WebSocket variable
+        let isConnected = false; // Flag to track connection status
 
-    // Show "thinking" indicator as a chat bubble
-    function showThinkingIndicator() {
-        document.getElementById('chat-box').innerHTML += `
-            <div class="bot-message thinking-bubble" id="thinking-indicator">
-                <p><i class="fas fa-spinner fa-spin"></i> Thinking...</p>
-            </div>
-        `;
-        scrollChatToBottom();
-    }
 
-    // Hide "thinking" indicator when response arrives
-    function hideThinkingIndicator() {
-        const thinkingIndicator = document.getElementById('thinking-indicator');
-        if (thinkingIndicator) {
-            thinkingIndicator.remove();
+        document.getElementById('new-chat-btn').addEventListener('click', function() {
+            // Make an AJAX request to start a new chat
+            fetch("{% url 'start_new_chat' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.new_chat_id) {
+                    // Successfully received a new chat ID
+                    console.log("New Chat ID:", data.new_chat_id);
+
+                    // Show the chat section
+                    document.getElementById('chat-container').style.display = 'block';
+                    // Hide the "New Chat" button
+                    document.getElementById('new-chat-btn').style.display = 'none';
+
+                    // Optionally, you can display the new chat ID somewhere on the page
+                } else {
+                    console.error("Failed to start a new chat");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+
+        // Function to connect to the WebSocket
+        function connectWebSocket() {
+            chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/'+ roomName + '/' );
+
+            chatSocket.onopen = function(e) {
+                console.log('WebSocket connection established');
+                isConnected = true;  // Update the connection status
+            };
+
+            chatSocket.onclose = function(e) {
+                console.error('Chat socket closed unexpectedly');
+                isConnected = false; // Update the connection status
+            };
+
+            chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            hideThinkingIndicator();
+            document.getElementById('chat-box').innerHTML += `
+                <div class="bot-message chat-bubble">
+                    <p>${data.message}</p>
+                </div>
+            `;
+            scrollChatToBottom();
+        };
         }
-    }
+        // Initial WebSocket connection
+        connectWebSocket();
 
-    // Scroll chat box to bottom
-    function scrollChatToBottom() {
-        const chatBox = document.getElementById('chat-box');
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    chatSocket.onopen = function(e) {
-        console.log('WebSocket connection established');
-    };
-
-    chatSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        hideThinkingIndicator();
-        document.getElementById('chat-box').innerHTML += `
-            <div class="bot-message chat-bubble">
-                <p>${data.message}</p>
-            </div>
-        `;
-        scrollChatToBottom();
-    };
-
-    chatSocket.onclose = function(e) {
-        console.error('Chat socket closed unexpectedly');
-    };
-
-    // Handle Enter and Shift + Enter keypress for sending messages and newlines
-    document.getElementById('chat-input').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault(); // Prevent default newline action when sending
-
+        // Add event listener for the input box
         const messageInputDom = document.getElementById('chat-input');
-        let message = messageInputDom.value;
+        messageInputDom.addEventListener('keydown', function(event) {
+            // Check if the connection is closed and the user is typing
+            if (!isConnected && event.key !== 'Enter') {
+                console.log('Attempting to reconnect...');
+                connectWebSocket(); // Reconnect to the WebSocket
+            }
+        });
 
-        if (message.trim() !== '') {
-                // Replace newline characters with <br> for correct rendering
-                const formattedMessage = message.replace(/\n/g, '<br>');
+        // Show "thinking" indicator as a chat bubble
+        function showThinkingIndicator() {
+            document.getElementById('chat-box').innerHTML += `
+                <div class="bot-message thinking-bubble" id="thinking-indicator">
+                    <p><i class="fas fa-spinner fa-spin"></i> Thinking...</p>
+                </div>
+            `;
+            scrollChatToBottom();
+        }
 
+        // Hide "thinking" indicator when response arrives
+        function hideThinkingIndicator() {
+            const thinkingIndicator = document.getElementById('thinking-indicator');
+            if (thinkingIndicator) {
+                thinkingIndicator.remove();
+            }
+        }
+
+        // Scroll chat box to bottom
+        function scrollChatToBottom() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        
+
+
+        // Handle Enter and Shift + Enter keypress for sending messages and newlines
+        document.getElementById('chat-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent default newline action when sending
+
+            const messageInputDom = document.getElementById('chat-input');
+            let message = messageInputDom.value;
+
+            if (message.trim() !== '') {
+                    // Replace newline characters with <br> for correct rendering
+                    const formattedMessage = message.replace(/\n/g, '<br>');
+
+                    document.getElementById('chat-box').innerHTML += `
+                        <div class="user-message chat-bubble">
+                            <p>${formattedMessage}</p>
+                        </div>
+                    `;
+
+                    scrollChatToBottom();  // Scroll to the bottom of chat
+                    chatSocket.send(JSON.stringify({
+                        'message': message
+                    }));
+
+                    messageInputDom.value = ''; // Clear the input after sending
+
+                    // Show thinking indicator after message is sent
+                    showThinkingIndicator();
+                }
+            }
+        });
+
+
+        document.getElementById('send-btn').onclick = function(e) {
+            const messageInputDom = document.getElementById('chat-input');
+            const message = messageInputDom.value;
+
+            if (message.trim() !== '') {
                 document.getElementById('chat-box').innerHTML += `
                     <div class="user-message chat-bubble">
-                        <p>${formattedMessage}</p>
+                        <p>${message}</p>
                     </div>
                 `;
-
-                scrollChatToBottom();  // Scroll to the bottom of chat
+                scrollChatToBottom();
                 chatSocket.send(JSON.stringify({
                     'message': message
                 }));
-
-                messageInputDom.value = ''; // Clear the input after sending
+                messageInputDom.value = '';
 
                 // Show thinking indicator after message is sent
                 showThinkingIndicator();
             }
-        }
-    });
-
-
-    document.getElementById('send-btn').onclick = function(e) {
-        const messageInputDom = document.getElementById('chat-input');
-        const message = messageInputDom.value;
-
-        if (message.trim() !== '') {
-            document.getElementById('chat-box').innerHTML += `
-                <div class="user-message chat-bubble">
-                    <p>${message}</p>
-                </div>
-            `;
-            scrollChatToBottom();
-            chatSocket.send(JSON.stringify({
-                'message': message
-            }));
-            messageInputDom.value = '';
-
-            // Show thinking indicator after message is sent
-            showThinkingIndicator();
-        }
-    };
+        };
+    })
 </script>
     
 {% endblock content %}

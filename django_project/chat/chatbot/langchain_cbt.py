@@ -4,12 +4,15 @@ from typing_extensions import TypedDict
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
+from langchain_core.messages import trim_messages
 
-from langgraph.checkpoint.memory import MemorySaver
-# from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.checkpoint.postgres import PostgresSaver
 
 from .llm_backends import get_llm
 from .tools.search_tool import get_search_tool
+from .memory.mem_initializers import get_db_uri,iniialize_postgres,get_RAM_memory
+from .memory.mem_operations import clear_memory
+
 from langgraph.prebuilt import ToolNode, tools_condition
 
 ### BASIC AI AGENT ###
@@ -24,13 +27,11 @@ graph_builder = StateGraph(State)
 llm = get_llm()
 # Bot search tool
 search_tool = get_search_tool()
-# Bot Memory
-memory = MemorySaver()
-# DB_URI = "postgres://<username>:<password>@localhost:5432/<dbname>?sslmode=disable"
-# checkpointer = PostgresSaver.from_conn_string(DB_URI)
-
 available_tools = [search_tool]
 llm_with_tools = llm.bind_tools(available_tools)
+
+# Initialize bot memory
+iniialize_postgres()
 
 
 
@@ -38,7 +39,32 @@ llm_with_tools = llm.bind_tools(available_tools)
 
 # Chatbot node
 def chatbot(state: State):
-    return {"messages": [llm_with_tools.invoke(state["messages"])]}
+    # Message trimming strategy to optimize memory - 
+    
+    trimmed_messages = trim_messages(
+    state["messages"],
+    # Keep the last <= n_count tokens of the messages.
+    strategy="last",
+    token_counter=len,
+    # When token_counter=len, each message
+    # will be counted as a single token.
+    # Remember to adjust for your use case
+    max_tokens=20,
+    # Most chat models expect that chat history starts with either:
+    # (1) a HumanMessage or
+    # (2) a SystemMessage followed by a HumanMessage
+    start_on="human",
+    # Most chat models expect that chat history ends with either:
+    # (1) a HumanMessage or
+    # (2) a ToolMessage
+    end_on=("human", "tool"),
+    # Usually, we want to keep the SystemMessage
+    # if it's present in the original history.
+    # The SystemMessage has special instructions for the model.
+    include_system=True,
+    )
+
+    return {"messages": [llm_with_tools.invoke(trimmed_messages)]}
 
 # Tool node
 tool_node = ToolNode(tools=available_tools)
@@ -73,12 +99,20 @@ graph_builder.add_edge(START, "chatbot")
 
 
 ### COMPILE BUILT GRAPH ###
-graph = graph_builder.compile(checkpointer=memory)
-config = {"configurable": {"thread_id": "1"}}
-def stream_graph_updates(user_input: str):
-    for event in graph.stream({"messages": [("user", user_input)]},config):
-        for value in event.values():
-            value["messages"][-1].pretty_print()
+
+def invoke_graph_updates(user_input: str, thread_id = '1'):
+    DB_URI = get_db_uri()
+    with PostgresSaver.from_conn_string(DB_URI) as memory:
+        graph = graph_builder.compile(checkpointer=memory)
+        config = {"configurable": {"thread_id": '1'}}
+        res = []
+        # clear_memory(thread_id='1')
+        for event in graph.stream({"messages": [("user", user_input)]},config):
+            for value in event.values():
+                # print("Assistant:", value["messages"][-1].content)
+                res.append(value)
+    return res
+
 
 
 

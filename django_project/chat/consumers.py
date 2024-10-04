@@ -1,10 +1,9 @@
 # consumers.py
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-import time
+from .chatbot.langchain_cbt import invoke_graph_updates
 
-import json
-from channels.generic.websocket import AsyncWebsocketConsumer
+import time
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -30,16 +29,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = text_data_json['message']
 
         # Logic to process the incoming message and generate a response
-        response_message = self.process_message(message)
+        response_messages = self.process_message(message)
 
         # Send message to room group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': response_message
-            }
-        )
+        for response_message in response_messages:
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': response_message
+                }
+            )
     
     # Receive message from room group
     async def chat_message(self, event):
@@ -51,6 +51,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     def process_message(self, message):
-        # Here, implement the logic for what the bot should respond with.
-        time.sleep(2.5)
-        return f"Bot says: {message}"  # Replace this with your chatbot logic
+        chat_id = self.scope['session'].get('new_chat_id', '1')
+        print("Chat_id - ",chat_id)
+        res = invoke_graph_updates(user_input=message)
+        ans = []
+        for ele in res:
+            msg = ele["messages"][-1]
+            if not hasattr(msg, "tool_call_id"):
+                ans.append(msg.content)
+        print(ans)
+        return ans  

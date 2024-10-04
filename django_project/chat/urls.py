@@ -4,6 +4,7 @@ from .views import ChatListView, ChatDetailView, ChatCreateView, ChatDeleteView,
 
 urlpatterns = [
     path('', ChatListView.as_view(), name='chat-home'),
+    path('start-new-chat/', views.start_new_chat, name='start_new_chat'),
     path('chat/<int:pk>/', ChatDetailView.as_view(), name='chat-detail'),
     path('chat/new/', ChatCreateView.as_view(), name='chat-create'),
     path('chat/<int:pk>/update/', ChatUpdateView.as_view(), name='chat-update'),

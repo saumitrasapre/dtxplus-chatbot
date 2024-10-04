@@ -9,6 +9,7 @@ class Chat(models.Model):
     content = models.TextField()
     chat_date = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User,on_delete=models.CASCADE)
+    thread_id = models.IntegerField(default=1)
 
     def __str__(self) -> str:
         return self.title
