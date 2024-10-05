@@ -18,6 +18,9 @@ LLM_API_KEY = config('LLM_API_KEY')
 LLM_TYPE = config('LLM_TYPE')
 LLM_MODEL = config('LLM_MODEL')
 
+# TAVILY Attributes (used for web searches)
+TAVILY_API_KEY = config('TAVILY_API_KEY')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

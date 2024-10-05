@@ -14,6 +14,7 @@ class Profile(models.Model):
     next_appointment_datetime = models.DateTimeField(null=True, blank=True)
     doctors_name = models.CharField(max_length=100, null=True, blank=True)
     age = models.PositiveIntegerField(default=0)
+    additional_entities = models.TextField(null=True,blank=True) 
     image = models.ImageField(default='default.jpg', upload_to='profile_pics')
 
     def __str__(self) -> str:

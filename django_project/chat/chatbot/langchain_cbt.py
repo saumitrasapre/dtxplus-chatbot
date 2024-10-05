@@ -10,6 +10,8 @@ from langgraph.checkpoint.postgres import PostgresSaver
 
 from .llm_backends import get_llm
 from .tools.search_tool import get_search_tool
+from .tools.user_data_tool import get_user_info_tool
+from .tools.entities_tool import get_entities_tool
 from .memory.mem_initializers import get_db_uri,iniialize_postgres,get_RAM_memory
 from .memory.mem_operations import clear_memory
 
@@ -27,7 +29,9 @@ graph_builder = StateGraph(State)
 llm = get_llm()
 # Bot search tool
 search_tool = get_search_tool()
-available_tools = [search_tool]
+user_info_tool = get_user_info_tool()
+entities_tool = get_entities_tool()
+available_tools = [search_tool, user_info_tool, entities_tool]
 llm_with_tools = llm.bind_tools(available_tools)
 
 # Initialize bot memory
