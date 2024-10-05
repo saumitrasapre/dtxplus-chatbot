@@ -65,12 +65,28 @@
         </div>
       </div>
 </div>
+<div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;"></div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const roomName = "{{ user.username }}";
         let chatSocket = null;  // Initialize WebSocket variable
         let isConnected = false; // Flag to track connection status
+        // Function to show a notification
+        function showNotification(message) {
+            const notificationContainer = document.getElementById('notification-container');
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button class="close-btn" onclick="this.parentElement.remove()">x</button>
+            `;
+
+            // Append notification to the container
+            notificationContainer.appendChild(notification);
+        }
 
         // Function to connect to the WebSocket
         function connectWebSocket() {
@@ -88,13 +104,21 @@
 
             chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            hideThinkingIndicator();
-            document.getElementById('chat-box').innerHTML += `
-                <div class="bot-message chat-bubble">
-                    <p>${data.message}</p>
-                </div>
-            `;
-            scrollChatToBottom();
+            if (data.message) 
+            {
+                hideThinkingIndicator();
+                // Handle normal chat message                
+                document.getElementById('chat-box').innerHTML += `
+                    <div class="bot-message chat-bubble">
+                        <p>${data.message}</p>
+                    </div>
+                `;
+                scrollChatToBottom();
+            }
+            if (data.notification) {
+                // Handle notification
+                showNotification(data.notification);
+            }
         };
         }
         // Function to close the WebSocket

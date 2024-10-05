@@ -1,4 +1,3 @@
-# consumers.py
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .chatbot.langchain_cbt import invoke_graph_updates
@@ -52,6 +51,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
+    
+    # Method to handle notifications
+    async def send_notification(self, event):
+        notification_message = event['notification_message']
+        await self.send(text_data=json.dumps({
+            'notification': notification_message
+        }))
 
     def process_message(self, message):
         thread_id = self.scope['session'].get('new_chat_thread_id', '1')
@@ -61,6 +67,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         print("Chat_id - ",thread_id)
         res = invoke_graph_updates(user_input=message, thread_id=thread_id)
+        # print(res)
         ans = []
         for ele in res:
             msg = ele["messages"][-1]

@@ -8,9 +8,9 @@ from langchain.schema import SystemMessage, HumanMessage
 
 @tool("entities_tool")
 def entities_tool(query: str):
-    """Takes in the user input as the query and extracts key entities from the conversation which the patient mentioned.
-    For example, the patient's preference for appointment time, or any patient mention of
-    a medication /diet / etc."""
+    """Takes in the user input as the query and extracts and key entities from the conversation which the user mentioned.
+    For example, the user's preference for appointment time, or any user mention of
+    a medication or diet. Should strictly be called when any of these is mentioned by the user in any way or form."""
 
     entities_tool_llm = get_llm("entities_tool")
 
@@ -22,12 +22,12 @@ def entities_tool(query: str):
             content="""You are an entity extractor. You take in the user input as the query and extract
             key entities from the text which the user mentions.
             You also take in the existing list of user entities as input, and modify the attributes that exist there
-            if no new attributes are found.
+            if new entities are not found.
             If new entities are found, then append them to the user entities
-            Some examples of attributes include -  the patient's preference for appointment time, or any patient mention of
-            a medication /diet / etc.
-            For example if the patient says, "i am taking lisinopril
-            twice a day" then extract {"medication": "lisinopril", "frequency": "2 times a day"}. 
+            Pay strict attention to the user's preference for appointment time, or any user mention of
+            a medication /diet/allergy etc.
+            For example if the patient says, "i am taking lisinopril twice a day" 
+            then extract {"medication": "lisinopril", "frequency": "2 times a day"}. 
             Your output should be a dictionary of a list of dicts with only one key called "entities".
             Output should strictly be in json format. This is compulsory and a non-negotiable.
             There should be no other stray characters other than the json. 

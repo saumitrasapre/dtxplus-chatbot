@@ -7,7 +7,7 @@ import json
 @tool("fetch_user_info_tool")
 def fetch_user_info_tool():
     """Gets the first name, last name, age, phone_number, medical condition, medication regimen, last appointment date and time ,next appointment date and time, the doctor's name
-    and additional entities of the currently logged in user. Used as the absolute ground truth for any information regarding the
+    and additional entities (which includes user's preference for appointment time, or any user mention of a medication /diet/allergy) of the currently logged in user. Used as the absolute ground truth for any information regarding the
     user. Any info that contradicts these details is untrue and incorrect.
     This tool should compulsorily be used to obtain user info if any of these details are required. This information should not be asked to the user.
     """
@@ -24,9 +24,10 @@ def fetch_user_info_tool():
             "medication_regimen": current_user.profile.medication_regimen,
             "last_appointment": current_user.profile.last_appointment_datetime,
             "next_appointment": current_user.profile.next_appointment_datetime,
-            "doctor_name": current_user.profile.doctors_name
+            "doctor_name": current_user.profile.doctors_name,
+            "additional_entities": json.dumps(current_user.profile.additional_entities)
         }
-        return json.dumps(info)
+        return json.dumps(info, default=str)
     
     else:
         # User is not logged in, send dummy data instead (This should not happen in the normal case)

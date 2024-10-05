@@ -176,3 +176,37 @@ body {
   max-width: 1250px;  /* Optional: Set a max-width to prevent it from getting too wide */
   margin: 0 auto;     /* Center the container */
 }
+
+
+@keyframes slideIn {
+  from {
+      transform: translateY(20px);
+      opacity: 0;
+  }
+  to {
+      transform: translateY(0);
+      opacity: 1;
+  }
+}
+
+.notification {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+  animation: slideIn 0.5s forwards;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #721c24;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 15px;
+}
