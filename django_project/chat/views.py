@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from .chatbot.memory.mem_operations import get_next_available_thread_id,clear_memory, get_latest_checkpoint_from_memory,parse_checkpoint_messages_for_UI 
+from .chatbot.tools.summary_tool import summary_tool_parameterized
 from django.views.generic import ListView
 from django.views.generic.edit import (
     CreateView,
@@ -62,15 +63,21 @@ def save_chat(request):
             thread_id = request.session['new_chat_thread_id']
         else:
             thread_id = get_next_available_thread_id()
-        # Save the summary and title to the database
-        new_chat = Chat.objects.create(
-            author=request.user,
-            title=chat_title,
-            content="Chat content",
-            thread_id = thread_id
-        )
-
-         # Call the backend function to generate the chat ID
+        
+        if not Chat.objects.filter(thread_id=thread_id).exists():
+            # Save the summary and title to the database
+            new_chat = Chat.objects.create(
+                author=request.user,
+                title=chat_title,
+                content="Chat content",
+                thread_id = thread_id
+            )
+        else:
+            new_chat = Chat.objects.filter(thread_id=thread_id).first()
+            new_chat.title = chat_title
+            new_chat.save()
+        
+        # Call the backend function to generate the chat ID
         new_chat_thread_id = str(get_next_available_thread_id())
 
         # Store the chat ID in the session
@@ -97,15 +104,35 @@ def get_chat(request, chat_id):
     chkpt = get_latest_checkpoint_from_memory(str(thread_id))
     if chkpt:
         formatted_messages = parse_checkpoint_messages_for_UI(chkpt['messages'])
+        chat_summary = summary_tool_parameterized(formatted_messages)
         # Store the chat ID in the session
         request.session['new_chat_thread_id'] = thread_id
         request.session.modified = True  # Mark the session as modified
         request.session.save()           # Save the session explicitly
+        formatted_messages['summary'] = chat_summary
         return JsonResponse(formatted_messages)
     else:
         messages_list = []
         print("Error retrieving messages")
         return JsonResponse({'messages': messages_list})
+    
+
+def refresh_summary(request):
+    # Fetch the chat messages based on chat_id
+    if 'new_chat_thread_id' in request.session:
+        thread_id = request.session['new_chat_thread_id']
+    else:
+        thread_id = str(get_next_available_thread_id())
+    chkpt = get_latest_checkpoint_from_memory(str(thread_id))
+    if chkpt:
+        formatted_messages = parse_checkpoint_messages_for_UI(chkpt['messages'])
+        chat_summary = summary_tool_parameterized(formatted_messages)        
+        return JsonResponse({'summary': chat_summary})
+    else:
+        summary = ''
+        print("Error retrieving messages")
+        return JsonResponse({'summary': summary})
+
 
 def clear_chat(request):
     if 'new_chat_thread_id' in request.session:
@@ -126,7 +153,6 @@ def clear_chat(request):
             'success': True,
             'chat_id': new_chat_thread_id,
     })
-    
    
 
 

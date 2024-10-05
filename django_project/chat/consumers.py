@@ -2,14 +2,17 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .chatbot.langchain_cbt import invoke_graph_updates
-from .chatbot.tools.user_data_tool import UserInfo
+from .chatbot.common.common import UserInfo, ChatInfo
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'chat_{self.room_name}'
+        
+        # Set the current user that is logged in
         UserInfo.user = self.scope['user']
+        
         # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -52,6 +55,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     def process_message(self, message):
         thread_id = self.scope['session'].get('new_chat_thread_id', '1')
+        
+        # Set the current chat thread id that the user is interacting with
+        ChatInfo.chat_thread_id = thread_id
+
         print("Chat_id - ",thread_id)
         res = invoke_graph_updates(user_input=message, thread_id=thread_id)
         ans = []

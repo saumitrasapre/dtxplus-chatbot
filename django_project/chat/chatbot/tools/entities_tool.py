@@ -12,7 +12,7 @@ def entities_tool(query: str):
     For example, the patient's preference for appointment time, or any patient mention of
     a medication /diet / etc."""
 
-    entities_tool_llm = get_llm()
+    entities_tool_llm = get_llm("entities_tool")
 
     if UserInfo.user:
         c_usr_id = UserInfo.user.id

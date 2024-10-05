@@ -170,3 +170,9 @@ body {
   margin-bottom: 10px;
   resize: none;
 }
+
+.custom-container {
+  width: 95%;          /* Set the width to 90% of the viewport */
+  max-width: 1250px;  /* Optional: Set a max-width to prevent it from getting too wide */
+  margin: 0 auto;     /* Center the container */
+}

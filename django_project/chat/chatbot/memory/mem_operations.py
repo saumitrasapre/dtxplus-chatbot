@@ -33,7 +33,12 @@ def get_latest_checkpoint_from_memory(thread_id="1"):
 def parse_checkpoint_messages_for_UI(messages):
     chat_data = {'messages': []}
     for message in messages:
-        sender = 'user' if isinstance(message,HumanMessage) else 'bot'
+        if isinstance(message,HumanMessage):
+            sender = 'user'
+        elif isinstance(message,AIMessage):
+            sender = 'bot'
+        else:
+            continue
         chat_data['messages'].append({
             'sender': sender,
             'message': message.content

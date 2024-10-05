@@ -12,6 +12,7 @@ from .llm_backends import get_llm
 from .tools.search_tool import get_search_tool
 from .tools.user_data_tool import get_user_info_tool
 from .tools.entities_tool import get_entities_tool
+from .tools.summary_tool import get_summary_tool
 from .memory.mem_initializers import get_db_uri,iniialize_postgres,get_RAM_memory
 from .memory.mem_operations import clear_memory
 
@@ -29,15 +30,18 @@ graph_builder = StateGraph(State)
 llm = get_llm()
 # Bot search tool
 search_tool = get_search_tool()
+# User Info tool
 user_info_tool = get_user_info_tool()
+# Entities tool
 entities_tool = get_entities_tool()
-available_tools = [search_tool, user_info_tool, entities_tool]
+# Summary tool
+summary_tool = get_summary_tool()
+
+available_tools = [search_tool, user_info_tool, entities_tool, summary_tool]
 llm_with_tools = llm.bind_tools(available_tools)
 
 # Initialize bot memory
 iniialize_postgres()
-
-
 
 ### DEFINE NODES ###
 

@@ -16,6 +16,7 @@
                     <small class="text-muted">Press <strong>Enter</strong> to send, or <strong>Shift + Enter</strong> for a new line.</small>
                     <div class="button-group">
                         <button id="send-btn" class="btn btn-primary mt-2">Send</button>
+                        <button id="new-chat-btn-2" class="btn btn-secondary mt-2">New Chat</button>
                         <button id="save-chat-btn" class="btn btn-secondary mt-2">Save Chat</button>
                         <button id="clear-chat-btn" class="btn btn-danger mt-2">Clear Chat</button>
                     </div>
@@ -24,31 +25,43 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="content-section">
-          <h4>Chat History</h4>
-          <p class='text-muted'>Your chat history is visible here.
-            {% for chat in chats %}
-                <article class="media content-section">
-                    <img class="rounded-circle article-img"  src="{{ chat.author.profile.image.url }}">
-                    <div class="media-body">
-                    <div class="article-metadata">
-                        <small class="text-muted " >{{ chat.author }}</small>
-                        <small class="text-muted">{{ chat.chat_date | date:"M d, Y, f a" }}</small>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-7">
-                            <small><a class="article-title" id="chat-{{ chat.id }}" href="#">{{ chat.title }}</a></small>
-                        </div>
-                        <div class="col-md-5">
-                            <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'chat-update' chat.id %}"><i class="fas fa-edit fa-sm"></i></a>
-                            <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'chat-delete' chat.id %}"><i class="fas fa-trash fa-sm"></i></a>
-                        </div>
-                    </div>
-                    <!-- <p class="article-content">{{ chat.content }}</p> -->
-                    </div>
-                </article>
-            {% endfor %}
-          </p>
+        <div class="row-6">
+            <div class="content-section" id="chat-history-cs">
+                <h4>Chat History</h4>
+                <p class='text-muted' >Your chat history is visible here.</p>
+                <div class="overflow-auto" style="max-height: 400px;">
+                    {% for chat in chats %}
+                        <article class="media content-section">
+                            <img class="rounded-circle article-img"  src="{{ chat.author.profile.image.url }}">
+                            <div class="media-body">
+                                <div class="article-metadata">
+                                    <small class="text-muted " >{{ chat.author }}</small>
+                                    <small class="text-muted">{{ chat.chat_date | date:"M d, Y, f a" }}</small>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <small><a class="article-title" id="chat-{{ chat.id }}" href="#">{{ chat.title }}</a></small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a class="btn btn-danger btn-sm mt-1 mb-1 " href="{% url 'chat-delete' chat.id %}"><i class="fas fa-trash fa-sm"></i></a>
+                                    </div>
+                                </div>                    
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="row-6">
+            <div class="content-section" id="conversation-summary-cs" style="display: none;">
+                <div id="conversation-summary" style="display: none;">
+                    <h5>Conversation Summary</h5>
+                    <p id="summary-text"></p>
+                    <button id="refresh-summary-btn" class="btn btn-light">
+                        <i class="fas fa-sync"></i> Refresh Summary
+                    </button>
+                </div>
+            </div>
         </div>
       </div>
 </div>
@@ -58,37 +71,6 @@
         const roomName = "{{ user.username }}";
         let chatSocket = null;  // Initialize WebSocket variable
         let isConnected = false; // Flag to track connection status
-
-
-        document.getElementById('new-chat-btn').addEventListener('click', function() {
-            // Make an AJAX request to start a new chat
-            fetch("{% url 'start_new_chat' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.new_chat_thread_id) {
-                    // Successfully received a new chat ID
-                    console.log("New Chat ID:", data.new_chat_thread_id);
-
-                    // Show the chat section
-                    document.getElementById('chat-container').style.display = 'block';
-                    // Hide the "New Chat" button
-                    document.getElementById('new-chat-btn').style.display = 'none';
-
-                    // Optionally, you can display the new chat ID somewhere on the page
-                } else {
-                    console.error("Failed to start a new chat");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-            });
-        });
 
         // Function to connect to the WebSocket
         function connectWebSocket() {
@@ -215,6 +197,67 @@
             }
         };
 
+        document.getElementById('new-chat-btn').addEventListener('click', function() {
+            // Make an AJAX request to start a new chat
+            fetch("{% url 'start_new_chat' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.new_chat_thread_id) {
+                    // Successfully received a new chat ID
+                    console.log("New Chat ID:", data.new_chat_thread_id);
+
+                    // Show the chat section
+                    document.getElementById('chat-container').style.display = 'block';
+                    // Hide the "New Chat" button
+                    document.getElementById('new-chat-btn').style.display = 'none';
+                } else {
+                    console.error("Failed to start a new chat");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+
+        document.getElementById('new-chat-btn-2').addEventListener('click', function() {
+            // Clear chat messages from the chat box
+            const chatBox = document.getElementById('chat-box');
+            const chatMessages = chatBox.innerHTML;
+            // Clear chat messages
+            chatBox.innerHTML = '';
+            // Close the WebSocket for new chat
+            closeWebSocket();
+            
+            // Make an AJAX request to start a new chat
+            fetch("{% url 'start_new_chat' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.new_chat_thread_id) {
+                    // Successfully received a new chat ID
+                    console.log("New Chat ID:", data.new_chat_thread_id);
+                    // Reconnect to the WebSocket after clearing the chat area
+                    connectWebSocket();                   
+                } else {
+                    console.error("Failed to start a new chat");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+
 
         // Handle "Save Chat" button click
         document.getElementById('save-chat-btn').addEventListener('click', function() {
@@ -246,6 +289,10 @@
                         // Reconnect to the WebSocket after saving
                         connectWebSocket();
 
+                        // Clear the summary area
+                        document.getElementById('conversation-summary').style.display = 'none';
+                        document.getElementById('conversation-summary-cs').style.display = 'none';
+
                         // Optionally update the chat history UI
                         updateChatHistory();
                     } else {
@@ -274,10 +321,49 @@
                     if (data.success) {
                         // Reconnect to the WebSocket after clearing
                         connectWebSocket();
+                        // Clear the summary area
+                        document.getElementById('conversation-summary').style.display = 'none';
+                        document.getElementById('conversation-summary-cs').style.display = 'none';
                         // Update the chat history UI
                         updateChatHistory();
                     } else {
                         console.error("Failed to clear the chat");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }
+        });
+
+        document.getElementById('refresh-summary-btn').addEventListener('click', function() {
+            // Clear chat messages from the chat box
+            const chatBox = document.getElementById('chat-box');
+            const chatMessages = chatBox.innerHTML;
+            if (chatMessages.trim() !== '') {
+                // Close the WebSocket
+                closeWebSocket();
+                // Make an AJAX request to save the chat and generate the summary
+                fetch("{% url 'refresh_summary' %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        // Reconnect to the WebSocket after clearing
+                        connectWebSocket();
+                        // Show the summary area
+                        if (data.summary) {
+                            document.getElementById('summary-text').innerText = data.summary;
+                            document.getElementById('conversation-summary').style.display = 'block'; // Show summary
+                            document.getElementById('conversation-summary-cs').style.display = 'block';
+                        } else {
+                            document.getElementById('summary-text').innerText = 'No summary available.';
+                            document.getElementById('conversation-summary').style.display = 'block'; // Show summary
+                            document.getElementById('conversation-summary-cs').style.display = 'block';
+                        }
+                        // Update the chat history UI
+                        updateChatHistory();
+                    } else {
+                        console.error("Failed to refresh the summary");
                     }
                 })
                 .catch(error => {
@@ -339,6 +425,17 @@
 
                             // Scroll to bottom after rendering messages
                             chatBox.scrollTop = chatBox.scrollHeight;
+
+                            // Show conversation summary if available
+                            if (data.summary) {
+                                document.getElementById('summary-text').innerText = data.summary;
+                                document.getElementById('conversation-summary').style.display = 'block'; // Show summary
+                                document.getElementById('conversation-summary-cs').style.display = 'block';
+                            } else {
+                                document.getElementById('summary-text').innerText = 'No summary available.';
+                                document.getElementById('conversation-summary').style.display = 'block'; // Show summary
+                                document.getElementById('conversation-summary-cs').style.display = 'block';
+                            }
                         }
                     })
                     .catch(error => {
