@@ -10,7 +10,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-7">
-                            <small><a class="article-title" href="{% url 'chat-detail' chat.id %}">{{ chat.title }}</a></small>
+                            <small><a class="article-title" id="chat-{{ chat.id }}" href="#">{{ chat.title }}</a></small>
                         </div>
                         <div class="col-md-5">
                             <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'chat-update' chat.id %}"><i class="fas fa-edit fa-sm"></i></a>

@@ -113,7 +113,6 @@ def invoke_graph_updates(user_input: str, thread_id = '1'):
         # clear_memory(thread_id='1')
         for event in graph.stream({"messages": [("user", user_input)]},config):
             for value in event.values():
-                # print("Assistant:", value["messages"][-1].content)
                 res.append(value)
     return res
 

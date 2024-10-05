@@ -17,6 +17,7 @@
                     <div class="button-group">
                         <button id="send-btn" class="btn btn-primary mt-2">Send</button>
                         <button id="save-chat-btn" class="btn btn-secondary mt-2">Save Chat</button>
+                        <button id="clear-chat-btn" class="btn btn-danger mt-2">Clear Chat</button>
                     </div>
                 </div>
             </div>
@@ -36,7 +37,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-7">
-                            <small><a class="article-title" href="{% url 'chat-detail' chat.id %}">{{ chat.title }}</a></small>
+                            <small><a class="article-title" id="chat-{{ chat.id }}" href="#">{{ chat.title }}</a></small>
                         </div>
                         <div class="col-md-5">
                             <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'chat-update' chat.id %}"><i class="fas fa-edit fa-sm"></i></a>
@@ -193,7 +194,6 @@
             }
         });
 
-
         document.getElementById('send-btn').onclick = function(e) {
             const messageInputDom = document.getElementById('chat-input');
             const message = messageInputDom.value;
@@ -255,9 +255,101 @@
                 .catch(error => {
                     console.error("Error:", error);
                 });
-
             }
         });
+
+        document.getElementById('clear-chat-btn').addEventListener('click', function() {
+            // Clear chat messages from the chat box
+            const chatBox = document.getElementById('chat-box');
+            const chatMessages = chatBox.innerHTML;
+            if (chatMessages.trim() !== '') {
+                // Clear chat messages
+                chatBox.innerHTML = '';
+                // Close the WebSocket before clearing the chat
+                closeWebSocket();
+                // Make an AJAX request to save the chat and generate the summary
+                fetch("{% url 'clear_chat' %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reconnect to the WebSocket after clearing
+                        connectWebSocket();
+                        // Update the chat history UI
+                        updateChatHistory();
+                    } else {
+                        console.error("Failed to clear the chat");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }
+        });
+
+        const chatBox = document.getElementById('chat-box');
+
+        // Function to attach event listeners to chat history items
+        function attachEventListeners() {
+            document.querySelectorAll('.article-title').forEach(function(chatLink) {
+                chatLink.addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent default behavior
+
+                    // Hide the Start New Chat button
+                    document.getElementById('new-chat-btn').style.display = 'none';
+
+                     // Show the chat box
+                    document.getElementById('chat-container').style.display = 'block';
+
+                    // Get the chat id from the id attribute of the clicked element
+                    const chatId = event.target.id.split('-').pop();  // Extract chat_id from id="chat-123"
+                    
+                    // Close the WebSocket before fetching the data
+                    closeWebSocket();
+                    // Fetch the chat data from the server
+                    fetch("{% url 'get_chat' 0 %}".replace('0', chatId))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.messages) {
+                            // Reconnect to the WebSocket after obtaining the data
+                            connectWebSocket();
+                            // Clear the existing chat box content
+                            chatBox.innerHTML = '';
+
+                            // Iterate over messages and format based on sender
+                            data.messages.forEach(message => {
+                                let chatBubble;
+
+                                if (message.sender === 'user') {
+                                    chatBubble = `
+                                        <div class="user-message chat-bubble">
+                                            <p>${message.message}</p>
+                                        </div>
+                                    `;
+                                } else if (message.sender === 'bot') {
+                                    chatBubble = `
+                                        <div class="bot-message chat-bubble">
+                                            <p>${message.message}</p>
+                                        </div>
+                                    `;
+                                }
+
+                                // Append each message to the chat box
+                                chatBox.innerHTML += chatBubble;
+                            });
+
+                            // Scroll to bottom after rendering messages
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error loading chat:", error);
+                    });
+                });
+            });
+        }
+
+        // Attach event listeners initially for already rendered chat history
+        attachEventListeners();
 
         // Function to update chat history without reloading the page
         function updateChatHistory() {
@@ -265,6 +357,7 @@
             .then(response => response.text())
             .then(data => {
                 document.querySelector('.col-md-4 .content-section').innerHTML = data;
+                attachEventListeners(); // Reattach event listeners to the new chat history
             })
             .catch(error => {
                 console.error('Error updating chat history:', error);

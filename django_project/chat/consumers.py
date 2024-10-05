@@ -54,11 +54,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         thread_id = self.scope['session'].get('new_chat_thread_id', '1')
         print("Chat_id - ",thread_id)
         res = invoke_graph_updates(user_input=message, thread_id=thread_id)
-        print(res)
         ans = []
         for ele in res:
             msg = ele["messages"][-1]
             if not hasattr(msg, "tool_call_id"):
                 ans.append(msg.content)
-        print(ans)
         return ans  

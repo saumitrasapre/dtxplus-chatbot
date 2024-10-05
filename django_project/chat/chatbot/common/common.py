@@ -1,6 +1,7 @@
 import os
 
 class UserInfo:
+    """Class to asynchronously obtain the current user's details from channels."""
     user = None
 
 def set_env_if_not_exists(key, value):

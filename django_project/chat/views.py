@@ -6,11 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from .chatbot.memory.mem_operations import get_next_available_thread_id,clear_memory
-from django.views.generic import (
-    ListView,
-    DetailView,
-)
+from .chatbot.memory.mem_operations import get_next_available_thread_id,clear_memory, get_latest_checkpoint_from_memory,parse_checkpoint_messages_for_UI 
+from django.views.generic import ListView
 from django.views.generic.edit import (
     CreateView,
     UpdateView,
@@ -29,28 +26,14 @@ class ChatListView(LoginRequiredMixin,ListView):
     template_name = "chat/home.html"  # Default - <app>/<model>_<viewtype>.html
     context_object_name = "chats"
 
-    # Handle chats
-    def handle_chat(self):
-        # Perform your custom logic here
-        return "This function handles chat"
-
     def get_queryset(self) -> QuerySet[Any]:
         user = self.request.user
         return Chat.objects.filter(author=user).order_by("-chat_date")
     
-    def get_context_data(self, **kwargs):
-        # Get the default context data from ListView
-        context = super().get_context_data(**kwargs)
-        
-        # Add custom data using your custom function
-        context['chat_msg'] = self.handle_chat()
-        
-        return context
 
 @require_POST
 def start_new_chat(request):
     if 'new_chat_thread_id' in request.session:
-        print("here")
         new_chat_thread_id = request.session['new_chat_thread_id']
         # If a thread id already exists in session, flush its memory
         clear_memory(thread_id=str(new_chat_thread_id))
@@ -107,21 +90,45 @@ def chat_history_partial(request):
     chats = Chat.objects.filter(author=request.user)  # Assuming user-specific chat history
     return render(request, 'chat/partials/chat_history.html', {'chats': chats})
 
-        
-class ChatDetailView(LoginRequiredMixin, DetailView):
-    model = Chat
 
-    def get_queryset(self) -> QuerySet[Any]:
-        user = self.request.user
-        return Chat.objects.filter(author=user).order_by("-chat_date")
+def get_chat(request, chat_id):
+    # Fetch the chat messages based on chat_id
+    thread_id = Chat.objects.filter(id=chat_id).first().thread_id
+    chkpt = get_latest_checkpoint_from_memory(str(thread_id))
+    if chkpt:
+        formatted_messages = parse_checkpoint_messages_for_UI(chkpt['messages'])
+        # Store the chat ID in the session
+        request.session['new_chat_thread_id'] = thread_id
+        request.session.modified = True  # Mark the session as modified
+        request.session.save()           # Save the session explicitly
+        return JsonResponse(formatted_messages)
+    else:
+        messages_list = []
+        print("Error retrieving messages")
+        return JsonResponse({'messages': messages_list})
 
-class ChatCreateView(LoginRequiredMixin, CreateView):
-    model = Chat
-    fields = ['title','content']
+def clear_chat(request):
+    if 'new_chat_thread_id' in request.session:
+        new_chat_thread_id = request.session['new_chat_thread_id']
+    else:
+        new_chat_thread_id = str(get_next_available_thread_id())
+    
+    clear_memory(thread_id=str(new_chat_thread_id))
+    # Check if we have cleared a chat from history.
+    if Chat.objects.filter(thread_id=new_chat_thread_id).exists():
+        # If so, delete it from history.
+            Chat.objects.filter(thread_id=new_chat_thread_id).delete()
 
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
+    request.session['new_chat_thread_id'] = new_chat_thread_id
+    request.session.modified = True  # Mark the session as modified
+    request.session.save()           # Save the session explicitly
+    return JsonResponse({
+            'success': True,
+            'chat_id': new_chat_thread_id,
+    })
+    
+   
+
 
 class ChatUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Chat

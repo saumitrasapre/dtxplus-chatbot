@@ -1,6 +1,8 @@
 import psycopg2
-
+from .mem_initializers import get_db_uri
+from langgraph.checkpoint.postgres import PostgresSaver
 from django.conf import settings
+from langchain.schema import AIMessage, HumanMessage
 
 
 def clear_memory(thread_id="1"):
@@ -20,6 +22,24 @@ def clear_memory(thread_id="1"):
         cursor.execute(sql, (thread_id,)) 
         conn.commit()
     conn.close()
+
+def get_latest_checkpoint_from_memory(thread_id="1"):
+    DB_URI = get_db_uri()
+    with PostgresSaver.from_conn_string(DB_URI) as memory:
+        mem = memory.list(config = {"configurable": {"thread_id": str(thread_id)}})
+        checkpoint_ch_values = list(mem)[0].checkpoint["channel_values"]
+    return checkpoint_ch_values
+
+def parse_checkpoint_messages_for_UI(messages):
+    chat_data = {'messages': []}
+    for message in messages:
+        sender = 'user' if isinstance(message,HumanMessage) else 'bot'
+        chat_data['messages'].append({
+            'sender': sender,
+            'message': message.content
+        })
+    return chat_data
+    
 
 def get_next_available_thread_id():
     try:
