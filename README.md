@@ -70,5 +70,6 @@
     ```
 
 - Navigate to the server link in the command output on your web browser after the command runs successfully.
+- View the about page on the app to get a comprehensive overview of the features of the app.
 - Press `ctrl+c` to terminate the server after you are done.
 
