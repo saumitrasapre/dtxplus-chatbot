@@ -1,0 +1,490 @@
+{% extends "chat/base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="content-section">
+            <h2>New Chat</h2> 
+            <button id="new-chat-btn" class="btn btn-primary mt-2">Start New Chat</button>
+            
+            <!-- Chat box section, initially hidden -->
+            <div id="chat-container" style="display: none;">
+                <div id="chat-box" class="chat-box">
+                    <!-- Chat messages will appear here -->
+                </div>
+                <div class="input-section">
+                    <textarea id="chat-input" class="form-control" rows="3" placeholder="Type your message..."></textarea>
+                    <small class="text-muted">Press <strong>Enter</strong> to send, or <strong>Shift + Enter</strong> for a new line.</small>
+                    <div class="button-group">
+                        <button id="send-btn" class="btn btn-primary mt-2">Send</button>
+                        <button id="new-chat-btn-2" class="btn btn-secondary mt-2">New Chat</button>
+                        <button id="save-chat-btn" class="btn btn-secondary mt-2">Save Chat</button>
+                        <button id="clear-chat-btn" class="btn btn-danger mt-2">Clear Chat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="row-6">
+            <div class="content-section" id="chat-history-cs">
+                <h4>Chat History</h4>
+                <p class='text-muted' >Your chat history is visible here.</p>
+                <div class="overflow-auto" style="max-height: 400px;">
+                    {% for chat in chats %}
+                        <article class="media content-section">
+                            <img class="rounded-circle article-img"  src="{{ chat.author.profile.image.url }}">
+                            <div class="media-body">
+                                <div class="article-metadata">
+                                    <small class="text-muted " >{{ chat.author }}</small>
+                                    <small class="text-muted">{{ chat.chat_date | date:"M d, Y, f a" }}</small>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <small><a class="article-title" id="chat-{{ chat.id }}" href="#">{{ chat.title }}</a></small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a class="btn btn-danger btn-sm mt-1 mb-1 " href="{% url 'chat-delete' chat.id %}"><i class="fas fa-trash fa-sm"></i></a>
+                                    </div>
+                                </div>                    
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="row-6">
+            <div class="content-section" id="conversation-summary-cs" style="display: none;">
+                <div id="conversation-summary" style="display: none;">
+                    <h5>Conversation Summary</h5>
+                    <p id="summary-text"></p>
+                    <button id="refresh-summary-btn" class="btn btn-light">
+                        <i class="fas fa-sync"></i> Refresh Summary
+                    </button>
+                </div>
+            </div>
+        </div>
+      </div>
+</div>
+<div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roomName = "{{ user.username }}";
+        let chatSocket = null;  // Initialize WebSocket variable
+        let isConnected = false; // Flag to track connection status
+        // Function to show a notification
+        function showNotification(message) {
+            const notificationContainer = document.getElementById('notification-container');
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button class="close-btn" onclick="this.parentElement.remove()">x</button>
+            `;
+
+            // Append notification to the container
+            notificationContainer.appendChild(notification);
+        }
+
+        // Function to connect to the WebSocket
+        function connectWebSocket() {
+            chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/'+ roomName + '/' );
+
+            chatSocket.onopen = function(e) {
+                console.log('WebSocket connection established');
+                isConnected = true;  // Update the connection status
+            };
+
+            chatSocket.onclose = function(e) {
+                console.error('Chat socket closed unexpectedly');
+                isConnected = false; // Update the connection status
+            };
+
+            chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.message) 
+            {
+                hideThinkingIndicator();
+                // Handle normal chat message                
+                document.getElementById('chat-box').innerHTML += `
+                    <div class="bot-message chat-bubble">
+                        <p>${data.message}</p>
+                    </div>
+                `;
+                scrollChatToBottom();
+            }
+            if (data.notification) {
+                // Handle notification
+                showNotification(data.notification);
+            }
+        };
+        }
+        // Function to close the WebSocket
+        function closeWebSocket() {
+            if (chatSocket && isConnected) {
+                chatSocket.close();
+                console.log("WebSocket connection closed.");
+            }
+        }
+
+        // Initial WebSocket connection
+        connectWebSocket();
+
+        // Add event listener for the input box
+        const messageInputDom = document.getElementById('chat-input');
+        messageInputDom.addEventListener('keydown', function(event) {
+            // Check if the connection is closed and the user is typing
+            if (!isConnected && event.key !== 'Enter') {
+                console.log('Attempting to reconnect...');
+                connectWebSocket(); // Reconnect to the WebSocket
+            }
+        });
+
+        // Show "thinking" indicator as a chat bubble
+        function showThinkingIndicator() {
+            document.getElementById('chat-box').innerHTML += `
+                <div class="bot-message thinking-bubble" id="thinking-indicator">
+                    <p><i class="fas fa-spinner fa-spin"></i> Thinking...</p>
+                </div>
+            `;
+            scrollChatToBottom();
+        }
+
+        // Hide "thinking" indicator when response arrives
+        function hideThinkingIndicator() {
+            const thinkingIndicator = document.getElementById('thinking-indicator');
+            if (thinkingIndicator) {
+                thinkingIndicator.remove();
+            }
+        }
+
+        // Scroll chat box to bottom
+        function scrollChatToBottom() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        
+
+
+        // Handle Enter and Shift + Enter keypress for sending messages and newlines
+        document.getElementById('chat-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent default newline action when sending
+
+            const messageInputDom = document.getElementById('chat-input');
+            let message = messageInputDom.value;
+
+            if (message.trim() !== '') {
+                    // Replace newline characters with <br> for correct rendering
+                    const formattedMessage = message.replace(/\n/g, '<br>');
+
+                    document.getElementById('chat-box').innerHTML += `
+                        <div class="user-message chat-bubble">
+                            <p>${formattedMessage}</p>
+                        </div>
+                    `;
+
+                    scrollChatToBottom();  // Scroll to the bottom of chat
+                    chatSocket.send(JSON.stringify({
+                        'message': message
+                    }));
+
+                    messageInputDom.value = ''; // Clear the input after sending
+
+                    // Show thinking indicator after message is sent
+                    showThinkingIndicator();
+                }
+            }
+        });
+
+        document.getElementById('send-btn').onclick = function(e) {
+            const messageInputDom = document.getElementById('chat-input');
+            const message = messageInputDom.value;
+
+            if (message.trim() !== '') {
+                document.getElementById('chat-box').innerHTML += `
+                    <div class="user-message chat-bubble">
+                        <p>${message}</p>
+                    </div>
+                `;
+                scrollChatToBottom();
+                chatSocket.send(JSON.stringify({
+                    'message': message
+                }));
+                messageInputDom.value = '';
+
+                // Show thinking indicator after message is sent
+                showThinkingIndicator();
+            }
+        };
+
+        document.getElementById('new-chat-btn').addEventListener('click', function() {
+            // Make an AJAX request to start a new chat
+            fetch("{% url 'start_new_chat' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.new_chat_thread_id) {
+                    // Successfully received a new chat ID
+                    console.log("New Chat ID:", data.new_chat_thread_id);
+
+                    // Show the chat section
+                    document.getElementById('chat-container').style.display = 'block';
+                    // Hide the "New Chat" button
+                    document.getElementById('new-chat-btn').style.display = 'none';
+                } else {
+                    console.error("Failed to start a new chat");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+
+        document.getElementById('new-chat-btn-2').addEventListener('click', function() {
+            // Clear chat messages from the chat box
+            const chatBox = document.getElementById('chat-box');
+            const chatMessages = chatBox.innerHTML;
+            // Clear chat messages
+            chatBox.innerHTML = '';
+            // Close the WebSocket for new chat
+            closeWebSocket();
+            
+            // Make an AJAX request to start a new chat
+            fetch("{% url 'start_new_chat' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.new_chat_thread_id) {
+                    // Successfully received a new chat ID
+                    console.log("New Chat ID:", data.new_chat_thread_id);
+                    // Reconnect to the WebSocket after clearing the chat area
+                    connectWebSocket();                   
+                } else {
+                    console.error("Failed to start a new chat");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+
+
+        // Handle "Save Chat" button click
+        document.getElementById('save-chat-btn').addEventListener('click', function() {
+            // Clear chat messages from the chat box
+            const chatBox = document.getElementById('chat-box');
+            const chatMessages = chatBox.innerHTML;
+
+            if (chatMessages.trim() !== '') {
+                // Clear chat messages
+                chatBox.innerHTML = '';
+                // Close the WebSocket before saving the chat
+                closeWebSocket();
+                // Make an AJAX request to save the chat and generate the summary
+                fetch("{% url 'save_chat' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        'chat_messages': chatMessages
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("Chat saved successfully with title:", data.chat_title);
+                        
+                        // Reconnect to the WebSocket after saving
+                        connectWebSocket();
+
+                        // Clear the summary area
+                        document.getElementById('conversation-summary').style.display = 'none';
+                        document.getElementById('conversation-summary-cs').style.display = 'none';
+
+                        // Optionally update the chat history UI
+                        updateChatHistory();
+                    } else {
+                        console.error("Failed to save the chat");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }
+        });
+
+        document.getElementById('clear-chat-btn').addEventListener('click', function() {
+            // Clear chat messages from the chat box
+            const chatBox = document.getElementById('chat-box');
+            const chatMessages = chatBox.innerHTML;
+            if (chatMessages.trim() !== '') {
+                // Clear chat messages
+                chatBox.innerHTML = '';
+                // Close the WebSocket before clearing the chat
+                closeWebSocket();
+                // Make an AJAX request to save the chat and generate the summary
+                fetch("{% url 'clear_chat' %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reconnect to the WebSocket after clearing
+                        connectWebSocket();
+                        // Clear the summary area
+                        document.getElementById('conversation-summary').style.display = 'none';
+                        document.getElementById('conversation-summary-cs').style.display = 'none';
+                        // Update the chat history UI
+                        updateChatHistory();
+                    } else {
+                        console.error("Failed to clear the chat");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }
+        });
+
+        document.getElementById('refresh-summary-btn').addEventListener('click', function() {
+            // Clear chat messages from the chat box
+            const chatBox = document.getElementById('chat-box');
+            const chatMessages = chatBox.innerHTML;
+            if (chatMessages.trim() !== '') {
+                // Close the WebSocket
+                closeWebSocket();
+                // Make an AJAX request to save the chat and generate the summary
+                fetch("{% url 'refresh_summary' %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        // Reconnect to the WebSocket after clearing
+                        connectWebSocket();
+                        // Show the summary area
+                        if (data.summary) {
+                            document.getElementById('summary-text').innerText = data.summary;
+                            document.getElementById('conversation-summary').style.display = 'block'; // Show summary
+                            document.getElementById('conversation-summary-cs').style.display = 'block';
+                        } else {
+                            document.getElementById('summary-text').innerText = 'No summary available.';
+                            document.getElementById('conversation-summary').style.display = 'block'; // Show summary
+                            document.getElementById('conversation-summary-cs').style.display = 'block';
+                        }
+                        // Update the chat history UI
+                        updateChatHistory();
+                    } else {
+                        console.error("Failed to refresh the summary");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }
+        });
+
+        const chatBox = document.getElementById('chat-box');
+
+        // Function to attach event listeners to chat history items
+        function attachEventListeners() {
+            document.querySelectorAll('.article-title').forEach(function(chatLink) {
+                chatLink.addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent default behavior
+
+                    // Hide the Start New Chat button
+                    document.getElementById('new-chat-btn').style.display = 'none';
+
+                     // Show the chat box
+                    document.getElementById('chat-container').style.display = 'block';
+
+                    // Get the chat id from the id attribute of the clicked element
+                    const chatId = event.target.id.split('-').pop();  // Extract chat_id from id="chat-123"
+                    
+                    // Close the WebSocket before fetching the data
+                    closeWebSocket();
+                    // Fetch the chat data from the server
+                    fetch("{% url 'get_chat' 0 %}".replace('0', chatId))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.messages) {
+                            // Reconnect to the WebSocket after obtaining the data
+                            connectWebSocket();
+                            // Clear the existing chat box content
+                            chatBox.innerHTML = '';
+
+                            // Iterate over messages and format based on sender
+                            data.messages.forEach(message => {
+                                let chatBubble;
+
+                                if (message.sender === 'user') {
+                                    chatBubble = `
+                                        <div class="user-message chat-bubble">
+                                            <p>${message.message}</p>
+                                        </div>
+                                    `;
+                                } else if (message.sender === 'bot') {
+                                    chatBubble = `
+                                        <div class="bot-message chat-bubble">
+                                            <p>${message.message}</p>
+                                        </div>
+                                    `;
+                                }
+
+                                // Append each message to the chat box
+                                chatBox.innerHTML += chatBubble;
+                            });
+
+                            // Scroll to bottom after rendering messages
+                            chatBox.scrollTop = chatBox.scrollHeight;
+
+                            // Show conversation summary if available
+                            if (data.summary) {
+                                document.getElementById('summary-text').innerText = data.summary;
+                                document.getElementById('conversation-summary').style.display = 'block'; // Show summary
+                                document.getElementById('conversation-summary-cs').style.display = 'block';
+                            } else {
+                                document.getElementById('summary-text').innerText = 'No summary available.';
+                                document.getElementById('conversation-summary').style.display = 'block'; // Show summary
+                                document.getElementById('conversation-summary-cs').style.display = 'block';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error loading chat:", error);
+                    });
+                });
+            });
+        }
+
+        // Attach event listeners initially for already rendered chat history
+        attachEventListeners();
+
+        // Function to update chat history without reloading the page
+        function updateChatHistory() {
+            fetch("{% url 'chat_history_partial' %}")
+            .then(response => response.text())
+            .then(data => {
+                document.querySelector('.col-md-4 .content-section').innerHTML = data;
+                attachEventListeners(); // Reattach event listeners to the new chat history
+            })
+            .catch(error => {
+                console.error('Error updating chat history:', error);
+            });
+        }
+    });
+</script>
+    
+{% endblock content %}

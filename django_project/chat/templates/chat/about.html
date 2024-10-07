@@ -1,0 +1,303 @@
+{% extends "chat/base.html" %}
+{% block content %}
+<div class="container my-5">
+    <h1>About</h1>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="aboutTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="overview-tab" data-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">Overview</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="features-tab" data-toggle="tab" href="#features" role="tab" aria-controls="features" aria-selected="false">Features</a>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="aboutTabContent">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+            <div class="mt-4">
+                <h2>Project Overview</h2>
+                <p>This project focuses on building a Django application where a patient can interact with an AI bot for health-related conversations. 
+                    The AI bot manages health inquiries, patient requests, and provides relevant responses about their care plan, while filtering irrelevant or sensitive topics.</p>
+                <div id="overviewCarousel1" class="carousel slide" data-interval="false">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img src="/static/chat/images/about/new-chat-overview.png" class="d-block w-100" alt="Overview Image 1">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>New chat screen</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/ui-overview.png" class="d-block w-100" alt="Overview Image 2">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Overall UI</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/user-profile-overview.png" class="d-block w-100" alt="Overview Image 3">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>User Profile</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/button-overview.png" class="d-block w-100" alt="Overview Image 4">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Chat Buttons</p>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#overviewCarousel1" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#overviewCarousel1" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+                <br/>
+                <ul>
+                    <li>The home screen will contain a <strong> Start New Chat</strong>  button that will launch the chat window. A new chat thread will be created and the live conversation will be stored in the database.</li>
+                    <li>The system stores the patient's conversation history with the AI bot, displaying it with date and time stamps for easy reference. This will be displayed on the right hand side. Whenever you save a chat, the history will be updated there. You can click on individual chat history items to resume your previous chats.</li>
+                    <li>You can click on the user profile link to view the profile of the existing user. Users have detailed profiles containing information like their name, medical condition, medication regimen, last and next appointment details, and doctor's name. In here you can edit all of these key fields and any other additional attributes.</li>
+                    <li>The chat buttons are used to control your chat with the bot - </li>
+                    <li style="list-style-type: none;">
+                        <ul>
+                            <li>Send: Will send the typed message to the bot.</li> 
+                            <li>New Chat: Will clear the existing chat memory, clear the current conversation and start a new chat.</li>
+                            <li>Save Chat: Will save the chat uptill now (which will be populated in the chat history list).</li> 
+                            <li>Clear Chat: Will clear the existing chat memory. If the chat on the chat window is a previously saved chat, then it will be removed from memory too.</li> 
+                        </ul>
+                    </li>
+                </ul>
+
+                <h2>Tech Stack</h2>
+                <ul>
+                    <li><strong>Backend Framework:</strong> Django WSGI + ASGI(Channels and Daphne)</li>
+                    <li><strong>Supported Language Model Frameworks:</strong> Google GenAI, OpenAI, Anthropic</li>
+                    <li><strong>Database:</strong> PostgreSQL</li>
+                    <li><strong>RAG Frameworks:</strong> Langchain and Langgraph</li>
+                    <li><strong>Additional APIs:</strong> Tavily for web searches</li>
+                </ul>
+                <br/>
+                <h4>Architecture Details</h4>
+                <ul>
+                    <li>The chatbot uses Django's ASGI interface to asynchronously handle the chat window. Any messages sent by the user will be asynchronously delivered to the backend using websockets. This will ensure that the the bot can handle non-blocking backend calls with multiple simultaneous connections.</li>
+                    <li>We use Django channels to handle the asynchronous websocket chat requests along with the traditona HTTP requests for the rest of the website. Daphne is used to interface between Django (with channels) and the user. It acts as the ASGI server that handles incoming requests.</li>
+                    <li>The bot is essentially a state machine with 2 main states - the LLM agent and the tools. Every user query is handed over to the LLM agent. If the agent determines that it can handle the query by itself, then it responds on its own. Otherwise, it can take the help of the multiple tools available by performing a tool call.</li>
+                    <li>The following tools are available to the LLM - </li>
+                    <li style="list-style-type: none;">
+                        <ul>
+                            <li><strong>Search Tool:</strong> Used to perform web searches using the Tavily API, in case the user requests general health information that the LLM agent cannot handle on its own.</li>
+                            <li><strong>Entities Tool:</strong> This tool gathers interesting entities from the user input and stores them as a part of the user profile. The bot can use these entities in future conversations if it deems necessary.</li>
+                            <li><strong>User Data Tool:</strong> Used to query the user database to obtain user demographics. The bot uses this tool to obtain context regarding the user.</li>
+                            <li><strong>Appointment Tool:</strong> Used by the bot to notify the user regarding any changes, reschedules or cancellations of appointments.</li>
+                            <li><strong>Summary Tool APIs:</strong> Used by the bot to obtain a summary of the existing conversation so far.</li> 
+                        </ul>
+                    </li>
+                    <li>The bot memory optimizes the conversation history by maintaining a window of the last 20 interactions. If the interactions exceed this parameter then the oldest interaction is removed from memory.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Features Tab -->
+        <div class="tab-pane fade" id="features" role="tabpanel" aria-labelledby="features-tab">
+            <div class="mt-4">
+
+                <h2>General questions</h2>
+                <p>The bot has the ability to do web searches for any health and lifestyle related questions that the user might ask.</p>
+                <div id="featuresCarousel2" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img src="/static/chat/images/about/gen-inq-1.png" class="d-block w-100" alt="Gen Inq Image 1">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>The bot queries the database to answer questions regarding the patient.</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/gen-inq-2.png" class="d-block w-100" alt="Gen Inq Image 2">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>All these fields are obtained by using the user data tool.</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/gen-inq-3.png" class="d-block w-100" alt="Gen Inq Image 3">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>The bot performs web searches to handle general questions.</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/gen-inq-4.png" class="d-block w-100" alt="Gen Inq Image 4">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Here too.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#featuresCarousel2" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#featuresCarousel2" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+               
+                <h2>Out of domain questions</h2>
+                <p>The bot is primed to be a health specific chatbot, and therefore is instructed to politely issues a fallback in case out of domain questions are asked</p>
+                <div id="featuresCarousel3" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img src="/static/chat/images/about/incorr-inq-1.png" class="d-block w-100" alt="Incorr Inq Image 1">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>OOD queries are handled gracefully</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/incorr-inq-2.png" class="d-block w-100" alt="Incorr Inq Image 2">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Even persistence doesn't work</p>
+                            </div>
+                        </div>                   
+                    </div>
+                    <a class="carousel-control-prev" href="#featuresCarousel3" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#featuresCarousel3" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+
+                                
+                <h2>Saving and Resuming Chats</h2>
+                <p>Any conversation with the bot can be saved in memory. By clicking on past conversations, you will be able to pick up where you left off. The bot has context of that conversation thread and will not ask you again for the details.</p>
+                <div id="overviewCarousel2" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img src="/static/chat/images/about/chat-save-1.png" class="d-block w-100" alt="Save Image 1">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Click on Save Chat</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/chat-save-2.png" class="d-block w-100" alt="Save Image 2">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Chat is saved in chat history. Can be resumed by clicking on it.</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/chat-save-3.png" class="d-block w-100" alt="Save Image 2">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Chat summary is generated for every saved chat.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#overviewCarousel2" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#overviewCarousel2" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+                
+                <h2>Entity Recognition</h2>
+                <p>When a patient mentions additional entities in their message pertaining to medications, diet, or treatment plans, all of these are recorded and stored in the patient database for further use.</p>
+                <div id="overviewCarousel3" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img src="/static/chat/images/about/diet-pref-1.png" class="d-block w-100" alt="Diet Image 1">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Original diet preferences of patient</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/diet-pref-2.png" class="d-block w-100" alt="Diet Image 2">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Patient conveys change in diet</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/diet-pref-3.png" class="d-block w-100" alt="Diet Image 3">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Patient preferences recorded</p>
+                            </div>
+                        </div>
+
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/med-pref-1.png" class="d-block w-100" alt="Med Image 1">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Originally no medication in patient notes</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/med-pref-2.png" class="d-block w-100" alt="Med Image 2">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Patient conveys change in medication</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/med-pref-3.png" class="d-block w-100" alt="Med Image 3">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Patient medication recorded in additional entities</p>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#overviewCarousel3" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#overviewCarousel3" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+                
+                <h2>Appointments and preferences</h2>
+                <p>Patients' appointment requests and preferences are effectively recorded and are also notified to the patient for their records.</p>
+                <div id="featuresCarousel1" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img src="/static/chat/images/about/appt-pref-1.png" class="d-block w-100" alt="Appt Image 1">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Initial patient appointment preference.</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/appt-pref-2.png" class="d-block w-100" alt="Appt Image 2">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Patient conveys appointment preference</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/appt-pref-3.png" class="d-block w-100" alt="Appt Image 3">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Patient appointment preference recorded in additional entities</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/static/chat/images/about/appt-change.png" class="d-block w-100" alt="Appt Image 4">
+                            <div class="carousel-caption d-none d-md-block">                                
+                                <p>Patient request for appointment change notified</p>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#featuresCarousel1" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#featuresCarousel1" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

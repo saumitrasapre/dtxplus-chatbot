@@ -1,0 +1,284 @@
+body {
+    background: #fafafa;
+    color: #333333;
+    margin-top: 5rem;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: #444444;
+  }
+  
+  ul {
+    margin: 0;
+  }
+  
+  .bg-steel {
+    background-color: #5f788a;
+  }
+  
+  .site-header .navbar-nav .nav-link {
+    color: #cbd5db;
+  }
+  
+  .site-header .navbar-nav .nav-link:hover {
+    color: #ffffff;
+  }
+  
+  .site-header .navbar-nav .nav-link.active {
+    font-weight: 500;
+  }
+  
+  .content-section {
+    background: #ffffff;
+    padding: 10px 20px;
+    border: 1px solid #dddddd;
+    border-radius: 3px;
+    margin-bottom: 20px;
+  }
+  
+  .article-title {
+    color: #444444;
+  }
+  
+  a.article-title:hover {
+    color: #428bca;
+    text-decoration: none;
+  }
+  
+  .article-content {
+    white-space: pre-line;
+  }
+  
+  .article-img {
+    height: 25px;
+    width: 25px;
+    margin-right: 12px;
+  }
+  
+  .article-metadata {
+    padding-bottom: 1px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #e3e3e3
+  }
+  
+  .article-metadata a:hover {
+    color: #333;
+    text-decoration: none;
+  }
+  
+  .article-svg {
+    width: 25px;
+    height: 25px;
+    vertical-align: middle;
+  }
+  
+  .account-img {
+    height: 125px;
+    width: 125px;
+    margin-right: 20px;
+    margin-bottom: 16px;
+  }
+  
+  .account-heading {
+    font-size: 2.5rem;
+  }
+
+/* Chat Box */
+.chat-box {
+  border: 1px solid #ccc;
+  padding: 10px;
+  height: 500px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  font-size: 14px; /* Reduced from default (approx. 16px) */
+}
+
+/* Chat Bubbles */
+.chat-bubble {
+  padding: 12px 18px;
+  margin: 10px 0;
+  border-radius: 20px;
+  max-width: 60%;
+  word-wrap: break-word;
+  position: relative;
+  display: inline-block;
+  clear: both;
+  font-size: 14px; /* Reduced font size */
+}
+
+/* User (Right-side) Messages */
+.user-message {
+  background-color: #cce5ff; /* Light blue */
+  color: #000;
+  float: right;
+  text-align: left;
+  border-radius: 20px 20px 0px 20px; /* Bubble shape */
+  margin-right: 15px; /* To ensure it doesn't stick to the right edge */
+  font-size: 14px; /* Reduced font size */
+}
+
+/* Bot (Left-side) Messages */
+.bot-message {
+  background-color: #d4edda; /* Light green */
+  color: #000;
+  float: left;
+  text-align: left;
+  border-radius: 20px 20px 20px 0px; /* Bubble shape */
+  margin-left: 15px; /* To ensure it doesn't stick to the left edge */
+  margin-top: 10px; /* Align slightly below the user's message */
+  font-size: 14px; /* Reduced font size */
+}
+
+/* Thinking Indicator Bubble (Appears as bot message) */
+.thinking-bubble {
+  background-color: #d4edda; /* Same as bot message */
+  color: #555;
+  float: left;
+  text-align: left;
+  border-radius: 20px 20px 20px 0px; /* Same bubble shape as bot message */
+  margin-left: 15px;
+  margin-top: 10px;
+  padding: 12px 18px;
+  font-size: 14px; /* Reduced font size */
+  display: inline-block;
+  clear: both;
+}
+
+
+/* Input Section */
+.input-section {
+  margin-top: 15px;
+}
+
+/* Flex Container for Buttons */
+.button-group {
+  display: flex; /* Use flexbox to align buttons */
+  justify-content: center; /* Center the buttons horizontally */
+  margin-top: 10px; /* Space above buttons */
+}
+
+/* Centering the Send Button and Save Chat Button */
+#send-btn, #save-chat-btn {
+  margin: 0 5px; /* Space between buttons */
+  padding: 15px 15px; /* Adjust padding for a larger clickable area */
+}
+
+/* Textarea Styling */
+#chat-input {
+  width: 100%;
+  margin-bottom: 10px;
+  resize: none;
+}
+
+.custom-container {
+  width: 95%;          /* Set the width to 90% of the viewport */
+  max-width: 1250px;  /* Optional: Set a max-width to prevent it from getting too wide */
+  margin: 0 auto;     /* Center the container */
+}
+
+
+@keyframes slideIn {
+  from {
+      transform: translateY(20px);
+      opacity: 0;
+  }
+  to {
+      transform: translateY(0);
+      opacity: 1;
+  }
+}
+
+.notification {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+  animation: slideIn 0.5s forwards;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #721c24;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 15px;
+}
+
+/* Make carousel controls visible on a white background */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.5); /* Adds a semi-transparent background */
+    border-radius: 50%; /* Rounds the background */
+    width: 50px;
+    height: 50px;
+}
+
+/* Add a white border around controls for better visibility */
+.carousel-control-prev,
+.carousel-control-next {
+    background-color: white; /* Visible white background for the control buttons */
+    border-radius: 50%; /* Makes the background circular */
+    border: 2px solid rgba(0, 0, 0, 0.5); /* Adds a slight border */
+    width: 50px;
+    height: 50px;
+    opacity: 1; /* Ensures the controls are always visible */
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%); /* Adjust for control's height */
+}
+
+/* Adjust icon sizes inside controls */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-size: 75%, 75%; /* Resizes the arrow icons */
+}
+
+/* Optional: Add hover effects for controls */
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    background-color: rgba(0, 0, 0, 0.8); /* Darken background on hover */
+    border-color: rgba(255, 255, 255, 0.8); /* Lighter border on hover */
+}
+
+.carousel-captions {
+  text-align: center;
+  margin-top: 5px;
+}
+
+/* Custom styles for carousel captions */
+.carousel-caption {
+  position: absolute;
+  bottom: 2px; /* Position the text near the bottom */
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
+  color: white; /* White text to stand out */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Add shadow for better contrast */
+  background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent dark background behind text */
+  padding: 3px;
+  border-radius: 10px; /* Rounded edges for a softer look */
+  max-width: 80%; /* Restrict width of captions */
+}
+
+/* Set a fixed height for carousel images */
+.carousel-inner img {
+  height: 570px; /* Adjust height as needed */
+  width: 100%; /* Make sure it spans the full width */
+  object-fit: contain; 
+  background-color: white;
+}
+
+
+.carousel-caption h5 {
+  color: white;
+  font-size: 1.5rem; /* Slightly larger title text */
+}
+
+.carousel-caption p {
+  font-size: 1rem; /* Standard paragraph size */
+}
