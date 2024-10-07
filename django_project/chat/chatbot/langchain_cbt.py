@@ -96,7 +96,7 @@ graph_builder.add_node("my_tools", tool_node)
 
 
 ### ADD EDGES TO CONNECT NODES ###
-# The `route_tools` function returns "tools" if the chatbot asks to use a tool, and "END" if
+# The `tools_condition` function returns "tools" if the chatbot asks to use a tool, and "END" if
 # it is fine directly responding. This conditional routing defines the main agent loop.
 graph_builder.add_conditional_edges(
     "chatbot",
@@ -136,6 +136,7 @@ def invoke_graph_updates(user_input: str, thread_id = '1'):
         config = {"configurable": {"thread_id": str(thread_id)}}
         res = []
         existing_messages = list(memory.list(config=config))
+        # Used for debugging
         # clear_memory(thread_id='1')
         if existing_messages:
             for event in graph.stream({"messages": [("user", user_input)]},config):

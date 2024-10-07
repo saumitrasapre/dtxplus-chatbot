@@ -4,6 +4,7 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from django.conf import settings
 
 # Bot Memory - RAM
+# Use this only for testing/debugging. Memory will be flushed every time the application is restarded.
 def get_RAM_memory():
     memory = MemorySaver()
     return memory

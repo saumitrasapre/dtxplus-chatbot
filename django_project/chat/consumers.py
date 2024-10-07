@@ -67,7 +67,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         print("Chat_id - ",thread_id)
         res = invoke_graph_updates(user_input=message, thread_id=thread_id)
-        print(res)
+        # Uncomment to debug
+        # print(res)
         ans = []
         for ele in res:
             msg = ele["messages"][-1]

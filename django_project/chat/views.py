@@ -56,7 +56,6 @@ def save_chat(request):
     chat_messages = data.get('chat_messages', '')
 
     if chat_messages:
-        # chat_summary, chat_title = summarize_chat(chat_messages)
         chat_title = f"Chat - {timezone.now().strftime('%d/%m/%Y - %H:%M:%S')}"
 
         if 'new_chat_thread_id' in request.session:
@@ -94,7 +93,7 @@ def save_chat(request):
     return JsonResponse({'success': False, 'error': 'No chat messages found'})
 
 def chat_history_partial(request):
-    chats = Chat.objects.filter(author=request.user)  # Assuming user-specific chat history
+    chats = Chat.objects.filter(author=request.user)
     return render(request, 'chat/partials/chat_history.html', {'chats': chats})
 
 
@@ -196,13 +195,11 @@ class ChatDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         request.session.modified = True  # Mark session as modified to ensure it's saved
         request.session.save()           # Save the session explicitly
 
-        # Log for debugging purposes
         print(f"New chat thread ID {new_chat_thread_id} set in session.")
 
         # Proceed with the actual deletion of the object
         response = super().post(request, *args, **kwargs)
 
-        # Log confirmation of deletion
         print(f"Chat {chat.thread_id} deleted successfully.")
 
         # Return the standard DeleteView response (redirect to success_url)
