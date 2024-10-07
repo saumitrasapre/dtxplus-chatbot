@@ -4,7 +4,7 @@
 ### 1. Creating a `.env` file
 - Create a copy of the `.env.example` file located in the `django_project` directory and rename it to `.env`.
 ### 2. Generate API Keys
-- Generate your LLM API keys of your preferred LLM. (Supported LLMs are GoogleGenAI, OpenAI and Anthropic).
+- Generate your LLM API keys of your preferred LLM frameworks. (Supported LLM frameworks are GoogleGenAI, OpenAI and Anthropic).
 - Paste in your LLM API keys for the main LLM, entity tools and the summary tools in their appropriate fields. You can use the same or different LLMs for each of them.
 - Go to the [Tavily AI website](https://tavily.com/) and generate a free API key from there. Paste the API key in the `TAVILY_API_KEY` field in the `.env` file. Tavily is an API that is used to perform web searches.
 ### 2. Creating a database
