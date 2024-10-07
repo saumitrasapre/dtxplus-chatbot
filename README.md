@@ -1,7 +1,13 @@
 # dtxplus-chatbot
 
 ## Before Proceeding with the installation
-- Ensure that you have the provided `.env` and `data.json` files with you.
+### 1. Creating a `.env` file
+- Create a copy of the `.env.example` file located in the `django_project` directory and rename it to `.env`.
+### 2. Generate API Keys
+- Generate your LLM API keys of your preferred LLM. (Supported LLMs are GoogleGenAI, OpenAI and Anthropic).
+- Paste in your LLM API keys for the main LLM, entity tools and the summary tools in their appropriate fields. You can use the same or different LLMs for each of them.
+- Go to the [Tavily AI website](https://tavily.com/) and generate a free API key from there. Paste the API key in the `TAVILY_API_KEY` field in the `.env` file. Tavily is an API that is used to perform web searches.
+### 2. Creating a database
 - Please install the latest version of PostgreSQL from [here](https://www.postgresql.org/download/).
 - Ensure that you also have `pgAdmin4` installed along with this. `pgAdmin4` is a UI for PostgreSQL that is used to easily navigate the database. It usually comes bundled with PostgreSQL.
 - Perform the initial setup of PostgreSQL by setting a password for the `postgres` user.
@@ -43,11 +49,9 @@
     ```shell
    cd django_project
     ```
-- Paste in the provided `.env` and `data.json` files here. This is very important before proceeding.
 
 > [!WARNING]
-> Please ensure that you have pasted the `.env` and `data.json` files in the outer `django_project` directory and not the inner one.
-> All commands from here on out are executed from this outer `django_project` directory.
+> All commands from here on out are executed from this `django_project` directory.
 
 > [!WARNING]
 > Please again verify that the database details in the `.env` file are the same for the database you have created.
