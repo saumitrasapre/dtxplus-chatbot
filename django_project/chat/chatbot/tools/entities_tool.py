@@ -8,9 +8,8 @@ from langchain.schema import SystemMessage, HumanMessage
 
 @tool("entities_tool")
 def entities_tool(query: str):
-    """Takes in the user input as the query and extracts and key entities from the conversation which the user mentioned.
-    For example, the user's preference for appointment time, or any user mention of
-    a medication or diet. Should strictly be called when any of these is mentioned by the user in any way or form."""
+    """Tool used to save relevant medical entities from the user input. Takes in the user input as the query and extracts and saves and key entities related to the user's preference for appointment time, or any user mention of
+    a medication or medication regimen or any diet from the conversation which the user mentioned. Should STRICTLY be called when any of these is mentioned by the user in any way, shape or form."""
 
     entities_tool_llm = get_llm("entities_tool")
 
@@ -30,7 +29,7 @@ def entities_tool(query: str):
             then extract {"medication": "lisinopril", "frequency": "2 times a day"}. 
             Your output should be a dictionary of a list of dicts with only one key called "entities".
             Output should strictly be in json format. This is compulsory and a non-negotiable.
-            There should be no other stray characters other than the json. 
+            There should be no other stray characters other than the json. Use minimal number of escape characters. 
             If there aren't any new entities then output the existing user entities as it is.
             """
         )

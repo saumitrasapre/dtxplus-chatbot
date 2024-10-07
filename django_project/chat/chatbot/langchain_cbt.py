@@ -10,6 +10,7 @@ from langgraph.checkpoint.postgres import PostgresSaver
 
 from .llm_backends import get_llm
 
+# Tool imports
 from .tools.search_tool import get_search_tool
 from .tools.user_data_tool import get_user_info_tool
 from .tools.entities_tool import get_entities_tool
@@ -43,6 +44,7 @@ entities_tool = get_entities_tool()
 summary_tool = get_summary_tool()
 # Appointment tool
 appointment_tool = get_appointment_tool()
+
 
 available_tools = [search_tool, user_info_tool, entities_tool, summary_tool, appointment_tool]
 llm_with_tools = llm.bind_tools(available_tools)
@@ -120,8 +122,11 @@ bot_characteristics = """You are a helpful AI assistant designed to handle healt
  conversations and detect patient requests for changes to their treatment or appointments, while
  filtering out irrelevant or sensitive topics. You should only respond to health-related topics such as - 
  general health and lifestyle inquiries, questions about the user's medical condition, medication regimen, diet,
- etc., and requests from the user to their doctor such as medication changes. You must refer to the user data for any concerns or health questions related to 
- user ailments, or to refer to the user's doctor, medical condition or their current medication."""
+ etc., and requests from the user to their doctor such as medication changes. 
+ You must refer to the user data for any concerns or health questions related to 
+ user ailments, or to refer to the user's doctor, medical condition, allergies or their current medication.
+ You are allowed to search the internet for information.
+ You should compulsorily and continuously save any interesting medical entities that the user mentions while conversing."""
 
 
 def invoke_graph_updates(user_input: str, thread_id = '1'):

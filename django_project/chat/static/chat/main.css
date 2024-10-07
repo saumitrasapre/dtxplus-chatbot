@@ -210,3 +210,75 @@ body {
   cursor: pointer;
   margin-left: 15px;
 }
+
+/* Make carousel controls visible on a white background */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.5); /* Adds a semi-transparent background */
+    border-radius: 50%; /* Rounds the background */
+    width: 50px;
+    height: 50px;
+}
+
+/* Add a white border around controls for better visibility */
+.carousel-control-prev,
+.carousel-control-next {
+    background-color: white; /* Visible white background for the control buttons */
+    border-radius: 50%; /* Makes the background circular */
+    border: 2px solid rgba(0, 0, 0, 0.5); /* Adds a slight border */
+    width: 50px;
+    height: 50px;
+    opacity: 1; /* Ensures the controls are always visible */
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%); /* Adjust for control's height */
+}
+
+/* Adjust icon sizes inside controls */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-size: 75%, 75%; /* Resizes the arrow icons */
+}
+
+/* Optional: Add hover effects for controls */
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    background-color: rgba(0, 0, 0, 0.8); /* Darken background on hover */
+    border-color: rgba(255, 255, 255, 0.8); /* Lighter border on hover */
+}
+
+.carousel-captions {
+  text-align: center;
+  margin-top: 5px;
+}
+
+/* Custom styles for carousel captions */
+.carousel-caption {
+  position: absolute;
+  bottom: 2px; /* Position the text near the bottom */
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
+  color: white; /* White text to stand out */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Add shadow for better contrast */
+  background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent dark background behind text */
+  padding: 3px;
+  border-radius: 10px; /* Rounded edges for a softer look */
+  max-width: 80%; /* Restrict width of captions */
+}
+
+/* Set a fixed height for carousel images */
+.carousel-inner img {
+  height: 570px; /* Adjust height as needed */
+  width: 100%; /* Make sure it spans the full width */
+  object-fit: contain; 
+  background-color: white;
+}
+
+
+.carousel-caption h5 {
+  color: white;
+  font-size: 1.5rem; /* Slightly larger title text */
+}
+
+.carousel-caption p {
+  font-size: 1rem; /* Standard paragraph size */
+}
