@@ -2,6 +2,10 @@
 
 ## Installation instructions
 - Clone this repository into a location of your choice.
+- Navigate to the project directory.
+    ```shell
+    cd dtxplus-chatbot
+    ```
 - Create a python virtual environment in the location.
     ```shell
     python -m venv .venv
